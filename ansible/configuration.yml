@@ -1,12 +1,22 @@
 ---
-- name: Configure Server for Raddit App
-  hosts: raddit-app
+- name: Configure Raddit App Instance
+  hosts: all
+  gather_facts: false
+  become: true
+
+  pre_tasks:
+    - name: Install python for Ansible to work
+      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+      changed_when: false
+
   tasks:
     - name: Install Ruby and Bundler
       apt:
         name: ruby-full build-essential
       gem:
         name: bundler
+        state: present
+        user_install: no
         include_doc: no
 
     - name: Install MongoDB
@@ -14,10 +24,12 @@
         id: D68FA50FEA312927
         keyserver: keyserver.ubuntu.com
       apt_repository:
-        repo: deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse
+        repo: deb [ arch=amd64,arm64 ] http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse
+        state: present
         filename: mongodb-org-3.2
       apt:
         update_cache: yes
+        state: present
         name: mongodb-org
 
     - name: Start MongoDB
